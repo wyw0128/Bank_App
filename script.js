@@ -4,29 +4,12 @@
 /////////////////////////////////////////////////
 // BANKIST APP
 
-/////////////////////////////////////////////////
 // Data
-
-// DIFFERENT DATA! Contains movement dates, currency and locale
-
 const account1 = {
   owner: 'Jonas Schmedtmann',
-  movements: [200, 455.23, -306.5, 25000, -642.21, -133.9, 79.97, 1300],
+  movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
   interestRate: 1.2, // %
   pin: 1111,
-
-  movementsDates: [
-    '2019-11-18T21:31:17.178Z',
-    '2019-12-23T07:42:02.383Z',
-    '2020-01-28T09:15:04.904Z',
-    '2020-04-01T10:17:24.185Z',
-    '2020-05-08T14:11:59.604Z',
-    '2022-02-08T17:01:17.194Z',
-    '2022-02-09T23:36:17.929Z',
-    '2022-02-10T10:51:36.790Z',
-  ],
-  currency: 'EUR',
-  locale: 'pt-PT', // de-DE
 };
 
 const account2 = {
@@ -34,24 +17,24 @@ const account2 = {
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
-
-  movementsDates: [
-    '2019-11-01T13:15:33.035Z',
-    '2019-11-30T09:48:16.867Z',
-    '2019-12-25T06:04:23.907Z',
-    '2020-01-25T14:18:46.235Z',
-    '2020-02-05T16:33:06.386Z',
-    '2020-04-10T14:43:26.374Z',
-    '2020-06-25T18:49:59.371Z',
-    '2020-07-26T12:01:20.894Z',
-  ],
-  currency: 'USD',
-  locale: 'en-US',
 };
 
-const accounts = [account1, account2];
+const account3 = {
+  owner: 'Steven Thomas Williams',
+  movements: [200, -200, 340, -300, -20, 50, 400, -460],
+  interestRate: 0.7,
+  pin: 3333,
+};
 
-/////////////////////////////////////////////////
+const account4 = {
+  owner: 'Sarah Smith',
+  movements: [430, 1000, 700, 50, 90],
+  interestRate: 1,
+  pin: 4444,
+};
+
+const accounts = [account1, account2, account3, account4];
+
 // Elements
 const labelWelcome = document.querySelector('.welcome');
 const labelDate = document.querySelector('.date');
@@ -78,60 +61,32 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-/////////////////////////////////////////////////
-// Functions
+// TOPIC: CREATING DOM ELEMENTS (insertAdjacentHTML)
 
-// TOPIC: OPERATIONS WITH DATES
-const formatMovementDate = function (date, locale) {
-  const calcDaysPassed = (date1, date2) =>
-    Math.round(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24));
+// NOTE: Instead of working with global variables, start passing the data that function needs actually into that function.
 
-  const daysPassed = calcDaysPassed(new Date(), date);
-  console.log(daysPassed);
-  // NOTE: As once we return, the function stops executing. And so these other returns will then never be reached.
-  if (daysPassed === 0) return 'Today';
-  if (daysPassed === 1) return 'Yesterday';
-  if (daysPassed <= 7) return `${daysPassed} days ago`;
+const displayMovements = function (movements, sort = false) {
+  // NOTE: InnerHTML is an built-in function that is a little bit similar to text content. The difference is that textContent simply returns the text itself while HTML returns everything, including the HTML. So all the HTML tags will be included.
 
-  // const day = `${date.getDate()}`.padStart(2, 0);
-  // const month = `${date.getMonth() + 1}`.padStart(2, 0);
-  // const year = date.getFullYear();
-  // return `${day}/${month}/${year}`;
-  return new Intl.DateTimeFormat(locale).format(date);
-};
-
-const formatCur = function (value, locale, currency) {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: currency,
-  }).format(value);
-};
-
-const displayMovements = function (acc, sort = false) {
   containerMovements.innerHTML = '';
-
-  const movs = sort
-    ? acc.movements.slice().sort((a, b) => a - b)
-    : acc.movements;
+  // .textContent = 0
+  // NOTE: .sort((a, b) => a - b) will return number value by ascending order.
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
 
   movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
 
-    const date = new Date(acc.movementsDates[i]);
-    const displayDate = formatMovementDate(date, acc.locale);
-
-    const formattedMov = formatCur(mov, acc.locale, acc.currency);
-
-    // NOTE: The currency is completely independent from the locale itself.
     const html = `
-      <div class="movements__row">
-        <div class="movements__type movements__type--${type}">${
+    <div class="movements__row">
+      <div class="movements__type movements__type--${type}">${
       i + 1
     } ${type}</div>
-        <div class="movements__date">${displayDate}</div>
-        <div class="movements__value">${formattedMov}</div>
-      </div>
-    `;
+      <div class="movements__value">${mov}€</div>
+    </div>
+  `;
+    // NOTE: The insertAdjacentHTML() method of the Element interface parses the specified text as HTML or XML and inserts the resulting nodes into the DOM tree at a specified position.
+
+    // NOTE: element.insertAdjacentHTML(position, text); Text: The string to be parsed as HTML or XML and inserted into the tree.
 
     containerMovements.insertAdjacentHTML('afterbegin', html);
   });
@@ -139,20 +94,19 @@ const displayMovements = function (acc, sort = false) {
 
 const calcDisplayBalance = function (acc) {
   acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
-
-  labelBalance.textContent = formatCur(acc.balance, acc.locale, acc.currency);
+  labelBalance.textContent = `${acc.balance}€`;
 };
 
 const calcDisplaySummary = function (acc) {
   const incomes = acc.movements
     .filter(mov => mov > 0)
     .reduce((acc, mov) => acc + mov, 0);
-  labelSumIn.textContent = formatCur(incomes, acc.locale, acc.currency);
+  labelSumIn.textContent = `${incomes}€`;
 
   const out = acc.movements
     .filter(mov => mov < 0)
     .reduce((acc, mov) => acc + mov, 0);
-  labelSumOut.textContent = formatCur(Math.abs(out), acc.locale, acc.currency);
+  labelSumOut.textContent = `${Math.abs(out)}€`;
 
   const interest = acc.movements
     .filter(mov => mov > 0)
@@ -162,8 +116,10 @@ const calcDisplaySummary = function (acc) {
       return int >= 1;
     })
     .reduce((acc, int) => acc + int, 0);
-  labelSumInterest.textContent = formatCur(interest, acc.locale, acc.currency);
+  labelSumInterest.textContent = `${interest}€`;
 };
+
+// TOPIC: COMPUTING USERNAMES
 
 const createUsernames = function (accs) {
   accs.forEach(function (acc) {
@@ -174,128 +130,71 @@ const createUsernames = function (accs) {
       .join('');
   });
 };
+// NOTE: In this function, we do not return anything, because what we're doing here is to produce a side effect. We are doing something to this account object here. And so there is no need to return anything.
+
 createUsernames(accounts);
 
 const updateUI = function (acc) {
   // Display movements
-  displayMovements(acc);
-
+  displayMovements(acc.movements);
   // Display balance
   calcDisplayBalance(acc);
-
   // Display summary
   calcDisplaySummary(acc);
 };
 
-const startLogOutTimer = function () {
-  const tick = function () {
-    const min = String(Math.trunc(time / 60)).padStart(2, 0);
-    const sec = String(time % 60).padStart(2, 0);
-    // In each call, print the remaining time to UI
-    labelTimer.textContent = `${min}:${sec}`;
+// TOPIC: IMPLEMENTING LOGIN
 
-    // When 0 seconds, stop timer and log out user
-    if (time === 0) {
-      clearInterval(timer);
-      labelWelcome.textContent = 'Log in to get started';
-      containerApp.style.opacity = 0;
-    }
-    // Decrease 1s
-    time--;
-  };
-  // Set time to 2 mins
-  let time = 120;
-
-  // Call the timer every second
-  // NOTE: So this callback function that we passed into set interval is not called immediately. It will only get called the first time after one second. The trick to doing that is to export this into a separate function, then call it immediately and then also start calling it every second using the set interval function.
-  tick();
-  const timer = setInterval(tick, 1000);
-  return timer;
-};
-
-///////////////////////////////////////
 // Event handlers
-let currentAccount, timer;
 
-// TOPIC: ADDING DATES TO 'BANKIST' APP
+let currentAccount;
 
-// FAKE ALWAYS LOGGED IN
-// currentAccount = account1;
-// updateUI(currentAccount);
-// containerApp.style.opacity = 100;
+// NOTE: When we click the button in a form element. So in HTML, the default behavior, when we click the Submit button, is for the page to reload.
+
+// NOTE: Another thing that's great about forms, is that whenever we have one of these fields here, input it, and when we then hit enter, then that will actually automatically trigger a click event on this button.
 
 btnLogin.addEventListener('click', function (e) {
+  // NOTE: When you are working with forms, preventing the reload is common to do.
+
   // Prevent form from submitting
   e.preventDefault();
-
   currentAccount = accounts.find(
     acc => acc.username === inputLoginUsername.value
   );
-  console.log(currentAccount);
-
-  if (currentAccount?.pin === +inputLoginPin.value) {
-    // Display UI and message
+  // console.log(currentAccount);
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    // Display UI and welcome message
     labelWelcome.textContent = `Welcome back, ${
       currentAccount.owner.split(' ')[0]
     }`;
     containerApp.style.opacity = 100;
 
-    // TOPIC: INTERNATIONALIZING DATES (INTL)
-
-    // Create current date and time
-    // NOTE: Experimenting API
-    // So just with this one line of code, we have correctly formatted the date for any user around the world.
-    // http://www.lingoes.net/en/translator/langcode.htm
-    const now = new Date();
-    const options = {
-      hour: 'numeric',
-      minute: 'numeric',
-      day: 'numeric',
-      month: 'numeric', // 2
-      // month: '2-digit', // 02
-      // month: 'long', // February
-      year: 'numeric',
-      // weekday: 'narrow', // F
-      // weekday: 'short', // Fri
-      // weekday: 'long', // Friday
-    };
-    // NOTE: Now in many situations, it actually makes more sense to not define the locale manually, but instead to simply get it from the user's browser using navigator.language.
-    // const locale = navigator.language;
-    // console.log(locale);
-    // labelDate.textContent = new Intl.DateTimeFormat('en-GB').format(now); //11/2/2022
-    labelDate.textContent = new Intl.DateTimeFormat(
-      currentAccount.locale,
-      options
-    ).format(now); //2/11/2022
-
-    // const now = new Date();
-    // // NOTE: The padStart() method pads the current string with another string (multiple times, if needed) until the resulting string reaches the given length. The padding is applied from the start of the current string.
-    // const day = `${now.getDate()}`.padStart(2, 0);
-    // const month = `${now.getMonth() + 1}`.padStart(2, 0);
-    // const year = `${now.getFullYear()}`;
-    // const hour = `${now.getHours()}`.padStart(2, 0);
-    // const min = `${now.getMinutes()}`.padStart(2, 0);
-    // labelDate.textContent = `${day}/${month}/${year}, ${hour}:${min}`;
-
     // Clear input fields
     inputLoginUsername.value = inputLoginPin.value = '';
+
+    // NOTE: We can use this blur function or method. So just call blur, and so that will make this field loses its focus.
+
     inputLoginPin.blur();
 
-    // Timer
-    if (timer) clearInterval(timer);
-    timer = startLogOutTimer();
     // Update UI
     updateUI(currentAccount);
   }
 });
 
+// TOPIC: IMPLEMENTING TRANSFERS
+
 btnTransfer.addEventListener('click', function (e) {
   e.preventDefault();
-  const amount = +inputTransferAmount.value;
+  const amount = Number(inputTransferAmount.value);
   const receiverAcc = accounts.find(
     acc => acc.username === inputTransferTo.value
   );
-  inputTransferAmount.value = inputTransferTo.value = '';
+
+  // Clean out input
+
+  // NOTE: Essentially, textContent gives you a textual representation of what a node contains. Think of it as being everything between the opening and closing tags (i.e. <span>this text</span>); <input> elements however cannot have children (content model: nothing). The value that is associated with them can only be accessed via the value property.
+
+  inputTransferTo.value = inputTransferAmount.value = '';
 
   if (
     amount > 0 &&
@@ -306,372 +205,551 @@ btnTransfer.addEventListener('click', function (e) {
     // Doing the transfer
     currentAccount.movements.push(-amount);
     receiverAcc.movements.push(amount);
-    // Add transfer date
-    currentAccount.movementsDates.push(new Date().toISOString());
-    receiverAcc.movementsDates.push(new Date().toISOString());
+
     // Update UI
     updateUI(currentAccount);
-    // Reset timer
-    clearInterval(timer);
-    timer = startLogOutTimer();
   }
 });
 
 btnLoan.addEventListener('click', function (e) {
   e.preventDefault();
-
-  const amount = Math.floor(inputLoanAmount.value);
-
+  const amount = Number(inputLoanAmount.value);
   if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
-    setTimeout(function () {
-      // Add movement
-      currentAccount.movements.push(amount);
-      // Add loan date
-      currentAccount.movementsDates.push(new Date().toISOString());
-      // Update UI
-      updateUI(currentAccount);
-      // Reset timer
-      clearInterval(timer);
-      timer = startLogOutTimer();
-    }, 2500);
+    console.log(currentAccount);
+    // Add movement
+    currentAccount.movements.push(amount);
+    // Update UI
+    updateUI(currentAccount);
   }
   inputLoanAmount.value = '';
 });
 
+// TOPIC: THE FINDINDEX METHOD
+
+// NOTE: The the findIndex method works almost the same way as find. But as the name says, findIndex returns the index of the found element and not the element itself.
+
+// NOTE: The find and findIndex methods get access to also the current index, and the current entire array. Both the find and findIndex methods were added to JavaScript in ES6. And so they will not work in like super old browsers.
+
 btnClose.addEventListener('click', function (e) {
   e.preventDefault();
-
   if (
     inputCloseUsername.value === currentAccount.username &&
-    +inputClosePin.value === currentAccount.pin
+    Number(inputClosePin.value) === currentAccount.pin
   ) {
     const index = accounts.findIndex(
       acc => acc.username === currentAccount.username
     );
     console.log(index);
+
+    // NOTE: The big difference here is that with indexOf, we can only search for a value that is in the array. So, if the array contains the 23, then it's true, and if not, then it's false. But on the other hand, with findIndex, we can create a complex condition like this one, and of course, it doesn't have to be the equality operator here. It can be anything that returns true or false.
+
     // .indexOf(23)
 
     // Delete account
     accounts.splice(index, 1);
-
-    // Hide UI
+    //Hide UI
     containerApp.style.opacity = 0;
+    //Clear
+    inputClosePin.value = inputCloseUsername.value = '';
   }
-
-  inputCloseUsername.value = inputClosePin.value = '';
 });
 
 let sorted = false;
 btnSort.addEventListener('click', function (e) {
   e.preventDefault();
-  displayMovements(currentAccount, !sorted);
+  displayMovements(currentAccount.movements, !sorted);
   sorted = !sorted;
 });
-
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // LECTURES
+
+const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+
+/////////////////////////////////////////////////
 /*
-// TOPIC: CONVERTING AND CHECKING NUMBERS
+// TOPIC: SIMPLE ARRAY METHODS
 
-// NOTE: In JavaScript, all numbers are presented internally as floating point numbers. So basically, always as decimals, no matter if we actually write them as integers or as decimals.
+let arr = ['a', 'b', 'c', 'd', 'e'];
 
-console.log(23 === 23.0); // true
+// SLICE (does not mutate)
 
-// NOTE: Numbers are represented internally in a 64 base 2 format. So that means that numbers are always stored in a binary format. So basically, they're only composed of zeros and ones.
+// NOTE: This does not mutate the original array (arr). Instead it returns a new array. So a copy of the array, but only with the extracted parts.
+console.log(arr.slice(2)); //['c', 'd', 'e']
 
-// Base 10 - 0 to 9
-// Binary base 2 - 0 1
-console.log(0.1 + 0.2); // 0.30000000000000004
-console.log(0.1 + 0.2 === 0.3); // false: it is a JS error.
+// NOTE: The length of the output array right here will be the end parameter minus the beginning one.
+console.log(arr.slice(2, 4)); // ['c', 'd']
+console.log(arr.slice(-2)); // ['d', 'e']
+console.log(arr.slice(-1)); // ['e']
+console.log(arr.slice(1, -2)); // ['b', 'c']
 
-// NOTE: Because when JavaScript sees the plus operator, it will do type coercion. So it will automatically convert all the operands to numbers.
+// NOTE: We can use the slice method to simply create a shallow copy of any array.
+console.log(arr.slice()); // ['a', 'b', 'c', 'd', 'e']
+console.log([...arr]);
 
-console.log(Number('23')); // 23
-console.log(+'23'); // 23
+// SPLICE (mutate)
 
-// Parsing
+// NOTE: A splice method works in almost the same way as slice. But the fundamental difference is that it does actually change the original array.
 
-// NOTE: On the Number object, which is a kind of this function here, but it's also an object in the end. Because every function is also an object. It has some methods to do parsing. eg. .parseInt. So here we can now specify a string and that string can even include some symbols. And JavaScript will then automatically try to figure out the number that is in this string.
+// NOTE: Splice actually does mutate the original array, so it takes part of the array and returns it and then the original array itself loses this part that was extracted.
+// console.log(arr.splice(2)); // ['c', 'd', 'e']
+arr.splice(-1);
+console.log(arr); // ['a', 'b', 'c', 'd']
 
-console.log(Number.parseInt('30px', 10)); // 30
+// NOTE: This first parameter here works the same as in the slice method but the second one is really the number of elements that we want to delete.
+arr.splice(1, 2);
+console.log(arr); // ['a', 'd']
 
-// NOTE: In order to make this work, the string needs to start with a number.
+// REVERSE (mutate)
 
-console.log(Number.parseInt('e23', 10)); // NaN
+// NOTE: Reverse does mutate the original array.
+arr = ['a', 'b', 'c', 'd', 'e'];
+const arr2 = ['j', 'i', 'h', 'g', 'f'];
+console.log(arr2.reverse()); // ['f', 'g', 'h', 'i', 'j']
 
-console.log(Number.parseInt('   2.5rem  ')); // 2
-console.log(Number.parseFloat('  2.5rem ')); // 2.5
+console.log(arr2); // ['f', 'g', 'h', 'i', 'j']
 
-// NOTE: Those two are so called global functions. We would not have to call them on Number. But it is an old-school way of doing it, now in modern JavaScript, it is more encouraged to call these functions actually on the Number object.
+// NOTE: CONCAT (does not mutate)
+const letters = arr.concat(arr2); 
+console.log(letters); // ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+console.log([...arr, ...arr2]); // ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
-// console.log(parseInt('2.5rem')); // 2
+// NOTE: JOIN (does not mutate)
+console.log(letters.join(' - '));
+console.log(arr.join(', ')); // a, b, c, d, e
+console.log(arr);
 
-// NOTE: Number here provides a namespace. So a namespace for all these different functions.
+// NOTE: String concatenation is faster than join. Concat two arrays is the same as using spread operator, but not a better way than spread operator; Join is used in an array, and it returns strings. 
 
+// TOPIC: THE NEW AT METHOD
+const arr = [23, 11, 64];
+console.log(arr[0]);
+console.log(arr.at(0));
 
-// Check if value is NaN
-console.log(Number.isNaN(20)); // false
-console.log(Number.isNaN('20')); // false
-console.log(Number.isNaN(+'20x')); // true
-console.log(Number.isNaN(23 / 0)); // false: it is an infinity
+// getting last array element
+console.log(arr[arr.length - 1]); // e
+console.log(arr.slice(-1)[0]); // e
+console.log(arr.at(-1)); // e
 
-// NOTE: the isFinite method is indeed the best way of checking if a value is a number. A real number, not a string.
-// Checking if value is number
-console.log(Number.isFinite(20)); // true
+// NOTE: The At Method also works on strings.
+console.log('jonas'.at(0)); // j
+console.log('jonas'.at(-1)); // s
 
-// NOTE: Number.isFinite() is more robust, the parameter will not first be converted to a number.
-console.log(isFinite('20')); // true
-console.log(Number.isFinite('20')); // false
-console.log(Number.isFinite(+'20x')); // false
-console.log(Number.isFinite(23 / 0)); // false
+// TOPIC: LOOPING ARRAYS: FOREACH
+const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
-// Check if the value is a integer
-console.log(Number.isInteger(23)); // true
-console.log(Number.isInteger(23.0)); // true
-console.log(Number.isInteger(23 / 0)); // false
+// for (const movement of movements) {
+for (const [i, movement] of movements.entries()) {
+  if (movement > 0) {
+    console.log(`Movement ${i + 1}: You deposited ${movement}`);
+  } else {
+    console.log(`Movement ${i + 1}: You withdrew ${Math.abs(movement)}`);
+  }
+}
 
-// TOPIC: MATH AND ROUNDING
-console.log(Math.sqrt(25)); // 5
-console.log(25 ** (1 / 2));
-// NOTE: This is the only way to calculate the cubic root if you need it.
-console.log(8 ** (1 / 3)); // 2
-
-// Max and min
-console.log(Math.max(5, 18, 23, 11, 2)); // 23
-// NOTE: This max function here actually does type coercion. However it does not parsing.
-console.log(Math.max(5, 18, '23', 11, 2)); // 23
-console.log(Math.max(5, 18, '23px', 11, 2)); // NaN
-
-console.log(Math.min(5, 18, 23, 11, 2));
-
-console.log(Math.PI * Number.parseFloat('10px') ** 2); // 314.1592653589793
-
-// How we make a random dice roll
-console.log(Math.trunc(Math.random() * 6) + 1);
-// NOTE: So this is how we end up with a nice function which will give us always a number that's going to stay between min and max.
-// 0...1 -> 0...(max - min) -> min...(max - min + min) -> min...max
-const randomInt = (min, max) =>
-// NOTE: The Math.floor() function returns the largest integer less than or equal to a given number. eg.console.log(Math.floor(5.95)); expected output: 5; console.log(Math.floor(-5.05)); expected output: -6
-  Math.floor(Math.random() * (max - min + 1)) + min;
-console.log(randomInt(10, 20));
-
-// Rounding integers
-
-console.log(Math.round(23.3)); // 23
-console.log(Math.round(23.9)); // 24
-
-console.log(Math.ceil(23.3)); // 24
-console.log(Math.ceil(23.9)); // 24
-
-console.log(Math.floor(23.3)); // 23
-console.log(Math.floor('23.9')); // 23
-
-// NOTE: So basically floor and trunc, both cut off the decimal part when we are dealing with positive numbers. Actually a floor is a little bit better than trunc because it works in all situations, no matter if we're dealing with positive or negative numbers.
-console.log(Math.trunc(-23.3)); // -23
-console.log(Math.trunc(-23.9)); // -23
-console.log(Math.floor(-23.3)); // -24
-console.log(Math.floor(-23.9)); // -24
-console.log(Math.ceil(-23.3)); // -23
-console.log(Math.ceil(-23.9)); // -23
-console.log(Math.round(-23.3)); // -23
-console.log(Math.round(-23.9)); // -24
-
-// Rounding decimals
-// NOTE: toFixed will always return a string and not a number.
-console.log((2.7).toFixed(0)); // '3'
-console.log((2.7).toFixed(3)); // '2.700'
-console.log(Number(2.345.toFixed(2))); // 2.35
-console.log(+(2.345).toFixed(2)); // 2.35
-
-// TOPIC: THE REMAINDER OPERATOR
-console.log(5 % 2); // 1
-console.log(8 % 3); // 2
-
-// Check even or odd
-console.log(6 % 2 === 0); // true
-console.log(7 % 2 === 0); // false
-
-const isEven = n => n % 2 === 0;
-
-console.log(isEven(8));
-console.log(isEven(23));
-console.log(isEven(514));
-
-// NOTE: so every Nth time, then it is a good idea to use the remainder operator for that.
-labelBalance.addEventListener('click', function () {
-  [...document.querySelectorAll('.movements__row')].forEach(function (row, i) {
-    if (i % 2 === 0) row.style.backgroundColor = 'orangered'; // 2nd time
-    if (i % 3 === 0) row.style.backgroundColor = 'blue'; // 3rd time
-  });
+// NOTE: What the forEach method does is to loop over the array, and in each iteration it will execute the callback function here.
+console.log('----------FOREACH-----------');
+movements.forEach(function (movement) {
+  if (movement > 0) {
+    console.log(`You deposited ${movement}`);
+  } else {
+    console.log(`You withdrew ${Math.abs(movement)}`);
+  }
 });
 
-// TOPIC: NUMERIC SEPARATORS
-// 287,460,000,000
-const diameter = 287_460_000_000;
-console.log(diameter); // 287460000000
+// 0: function(200)
+// 1: function(450)
+// 2: function(-400)
+// ...
 
-const priceCents = 345_99;
-console.log(priceCents);
+// NOTE: The first parameter always needs to be the current element, the second parameter always the current index and the third one always the entire array
+// NOTE: The Math.abs() function returns the absolute value of a number. That is, it returns x if x is positive or zero, and the negation of x if x is negative.
 
-const transferFee1 = 15_00;
-const transferFee2 = 1_500;
+movements.forEach(function (mov, i, arr) {
+  if (mov > 0) {
+    console.log(`Movement ${i + 1}: You deposited ${mov}`);
+  } else {
+    console.log(`Movement ${i + 1}: You withdrew ${Math.abs(mov)}`);
+  }
+});
 
-const PI = 3.14_15;
-console.log(PI); // 3.1415
+// NOTE: One fundamental difference between the for of loop and forEach is that you cannot break out of a forEach loop. So the continue and break statements do not work in a forEach loop at all.
 
-console.log(Number('230000'));
-console.log(Number('2300_00')); // NaN
-console.log(parseInt('2300_00')); // 2300
+// TOPIC: FOREACH WITH MAPS AND SETS
+// Map
+const currencies = new Map([
+  ['USD', 'United States dollar'],
+  ['EUR', 'Euro'],
+  ['GBP', 'Pound sterling'],
+]);
 
-// TOPIC: WORKING WITH BIGINT
+// NOTE: This function with three arguments. So the first one will be the current value, so the current value in the current iteration, the second one is the key, and the third one is the entire map that is being looped over.
 
-// NOTE: This is the biggest number that JavaScript can safely represent. it's even stored into the number namespace as MAX_SAFE_INTEGER.
-console.log(2 ** 53 - 1); // 9007199254740991
-console.log(Number.MAX_SAFE_INTEGER); // 9007199254740991
-console.log(2 ** 53 + 1); // 9007199254740992
-console.log(2 ** 53 + 2); // 9007199254740994
-console.log(2 ** 53 + 3); // 9007199254740996
-console.log(2 ** 53 + 4); // 9007199254740996
+currencies.forEach(function (value, key, map) {
+  console.log(`${key}: ${value}`);
+});
 
-// NOTE: BigInt stands for big integer. It is a new primitive type. And it can be used to store numbers as large as we want.
-// Those two have different outcomes.
-console.log(3243253254324534543656465465645645n);
-console.log(BigInt(3243253254324534543656465465645645));
+// Set
 
-// Operations
-console.log(10000n + 10000n); // 20000n
-console.log(32423524356234542353424564326563454236243n * 100000000n);
-// console.log(Math.sqrt(16n)); //Cannot convert a BigInt value to a number at Math.sqrt
+// NOTE: A set doesn't have keys, and it doesn't have indexes either. So there is no value that would make sense for the key.
 
-// NOTE: Cannot mix BigInt and other types
-const huge = 34254234624365462546435234n;
-const num = 23;
-console.log(huge * BigInt(num));
+// NOTE: We cannot have the duplicate parameter name. And so we can just use an underscore, which in JavaScript means a throwaway variable.
 
-console.log(20n > 15); // true
-console.log(20n === 20); // false
-console.log(typeof 20n); // bigint
-console.log(20 == 20n); // true: JS does type coercion
-console.log(20n == '20'); // true: JS does type coercion
+const currenciesUnique = new Set(['USD', 'GBP', 'USD', 'EUR', 'EUR']);
+console.log(currenciesUnique);
+currenciesUnique.forEach(function (value, _, map) {
+  console.log(`${value}: ${value}`);
+});
 
-console.log(huge + ' is REALLY big!!!'); // 34254234624365462546435234 is REALLY big!!! The number is actually converted to string, even for the BigInt.
+// TOPIC: DATA TRANSFORMATIONS: MAP, FILTER, REDUCE
 
-// Divisions
-// NOTE: It will cut the decimal part.
-console.log(10n / 3n); // 3n
-console.log(10 / 3); // 3.33333333333
+// MAP
 
+// NOTE: The map method is yet another method that we can use to loop over arrays. So, map is actually similar to the forEach method that we studied before but with the difference that map creates a brand new array based on the original array.
 
-// TOPIC: CREATING DATES
+// NOTE: More useful than in forEach method because forEach simply allows us to do some work with each array element. But map on the other hand, builds us a brand new array containing the results of applying an operation to the original array,
 
-// Create a date
-const now = new Date();
-console.log(now); // Thu Feb 10 2022 22:19:37 GMT+1100 (Australian Eastern Daylight Time)
+// FILTER
 
-console.log(new Date('Feb 10 2022 22:19:28')); // Thu Feb 10 2022 22:19:37 GMT+1100 (Australian Eastern Daylight Time)
-console.log(new Date('January 28, 2022')); // Fri Jan 28 2022 00:00:00 GMT+1100 (Australian Eastern Daylight Time)
-console.log(new Date(account1.movementsDates[0])); // Tue Nov 19 2019 08:31:17 GMT+1100 (Australian Eastern Daylight Time)
+// NOTE: Elements for which the condition is true will be included in a new array that the filter method returns.
 
-// NOTE: November is actually the month 10. the month here in JavaScript is zero based.
-console.log(new Date(2037, 10, 19, 15, 23, 5)); // Thu Nov 19 2037 15:23:05 GMT+1100 (Australian Eastern Daylight Time)
+// REDUCE
 
-// NOTE: JavaScript actually auto corrects the day.
-console.log(new Date(2037, 10, 33, 15, 23, 5)); // Thu Dec 03 2037 15:23:05 GMT+1100 (Australian Eastern Daylight Time)
+// NOTE: We use REDUCE method to boil down all the elements of the original array into one single value.
 
-console.log(new Date(0)); // Thu Jan 01 1970 10:00:00 GMT+1000 (Australian Eastern Standard Time)
-console.log(new Date(3 * 24 * 60 * 60 * 1000)); // Sun Jan 04 1970 10:00:00 GMT+1000 (Australian Eastern Standard Time)
+// TOPIC: THE MAP METHOD
 
-// NOTE: 3 * 24 * 60 * 60 * 1000 = 259200000; It is a timeStamp.
+const eurToUsd = 1.1;
 
-// Working with dates
-const future = new Date(2037, 10, 19, 15, 23);
-console.log(future);
-console.log(future.getFullYear()); // 2037
-console.log(future.getMonth()); // 10
-console.log(future.getDate()); // 19
-console.log(future.getDay()); // 4 Thursday
-console.log(future.getHours());
-console.log(future.getMinutes());
-console.log(future.getSeconds());
+// const movementsUSD = movements.map(function (mov) {
+//   return mov * eurToUsd;
+// });
 
-// NOTE: toISOString is one of the very useful cases is when you want to convert a particular date object into a string that you can then store somewhere.
-console.log(future.toISOString()); // 2037-11-19T04:23:00.000Z
+const movementsUSD = movements.map(mov => mov * eurToUsd);
 
-// NOTE: We can also get the timeStamp using getTime.
-console.log(future.getTime()); // 2142217380000
+console.log(movements);
+console.log(movementsUSD);
 
-console.log(new Date(2142217380000));
-// NOTE: So if you want simply the current timestamp for this exact moment, then you don't even need to create a new date. All we have to do is to call date.now.
-console.log(Date.now()); // 1644493215924
+const movementsUSDfor = [];
+for (const mov of movements) {
+  movementsUSDfor.push(mov * eurToUsd);
+}
+console.log(movementsUSDfor);
 
-future.setFullYear(2040); // Mon Nov 19 2040 15:23:00 GMT+1100 (Australian Eastern Daylight Time)
-console.log(future);
+const movementsDescriptions = movements.map(
+  (mov, i) =>
+    `Movement ${i + 1}: You ${mov > 0 ? 'deposited' : 'withdrew'} ${Math.abs(
+      mov
+    )}`
+);
+console.log(movementsDescriptions);
 
-// TOPIC: OPERATIONS WITH DATES
+// NOTE: In this map method we did not create a side effect in each of the iteration.
 
-// NOTE: We can do with dates is to do calculations with them. And this works, because whenever we attempt to convert a date to a number, then the result is going to be the timestamp in milliseconds.
+// TOPIC: THE FILTER METHOD
 
-const future = new Date(2037, 10, 19, 15, 23);
-console.log(Number(future)); // 2142217380000
-console.log(+future); // 2142217380000
-// NOTE: After the calculation, then we can simply convert these milliseconds back to Days, or to hours, or to whatever we really want.
+// NOTE: That condition is so that only the values that has the condition will then make it into the new array. And passing that condition means that it's true.
 
-const calcDaysPassed = (date1, date2) =>
-  Math.abs(date2 - date1) / (1000 * 60 * 60 * 24);
+const deposits = movements.filter(function (mov, i, arr) {
+  return mov > 0;
+});
+console.log(movements);
+console.log(deposits);
 
-const days1 = calcDaysPassed(new Date(2037, 3, 4), new Date(2037, 3, 14));
-console.log(days1);
+const depositsFor = [];
+for (const mov of movements) {
+  if (mov > 0) depositsFor.push(mov);
+}
+console.log(depositsFor);
 
-// NOTE: If you need really precise calculations, for example, including time changes due to daylight saving changes, and other weird edge cases like that, then you should use a date library like moment.js. And that's a library that's available for free for all JavaScript developers.
+// NOTE: Why should't we use for loop almost everywhere? Because we can actually chain all of these methods together. Basically use them all one after another to build a big final result.
 
-// TOPIC: INTERNATIONALIZING NUMBERS (INTL)
-const num = 3884764.23;
-// NOTE: There are three different options for the style. That's unit, percent or currency. If we have a currency, then the unit is just completely ignored. But we do have to then define the currency.
-const options = {
-  style: 'currency',
-  unit: 'celsius',
-  currency: 'EUR',
-  // useGrouping: false,
+// One line arrow function actually has a return and it is omitted. So this is why it works.
+
+const withdrawals = movements.filter(mov => mov < 0);
+console.log(withdrawals);
+
+// TOPIC: THE REDUCE METHOD
+
+console.log(movements);
+
+// NOTE: And this works because in each call of the callback function, the accumulator will be the current sum of all the previous values.
+
+// NOTE: This callback function is the first argument of the reduce method, but the reduce method actually has a second parameter, and that is the initial value of the accumulator.
+
+// Accumulator -> SNOWBALL
+
+// NOTE: A value to which Accumulator is initialized the first time the callback is called. If accumulator is specified, that also causes currentValue to be initialized to the first value in the array. If accumulator is not specified, accumulator is initialized to the first value in the array, and currentValue is initialized to the second value in the array.
+
+// const balance = movements.reduce(function (acc, cur, i, arr) {
+//   console.log(`Iteration ${i}: ${acc}`);
+//   return acc + cur;
+// }, 0);
+
+const balance = movements.reduce((acc, cur) => acc + cur, 0);
+console.log(balance);
+
+let balance2 = 0;
+for (const mov of movements) balance2 += mov;
+console.log(balance2);
+
+// Maximum value
+const max = movements.reduce(function (acc, mov) {
+  if (acc > mov) return acc;
+  else return mov;
+}, movements[0]);
+console.log(max);
+
+// NOTE: Reduce method is by far the most useful array method.
+
+// TOPIC: THE MAGIC OF CHAINING METHODS
+
+const eurToUsd = 1.1;
+console.log(movements);
+// Pipeline
+const totalDepositsUSD = movements
+  .filter(mov => mov > 0)
+  .map((mov, i, arr) => {
+    // console.log(arr);
+    return mov * eurToUsd;
+  })
+  .reduce((acc, mov) => acc + mov, 0);
+console.log(totalDepositsUSD);
+
+// NOTE: First we should not overuse chaining, so we should try to optimize it because chaining tons of methods one after the other can cause a real performance issues if we have really huge arrays. So if we have a huge chain of methods, chained one after the other, we should try to compress all the functionality that they do into as little methods as possible.
+
+// NOTE: Second, it is a bad practice in JavaScript to chain methods that mutate the underlying original array. And an example of that is the splice method. You should not chain a method like the splice or the reverse method.
+
+// TOPIC: THE FIND METHOD
+
+// NOTE: We can use the Find method to retrieve one element of an array based on a condition.
+
+// NOTE: The Find method will actually not return a new array but it will only return the first element in the array that satisfies this condition.
+
+const firstWithdrawal = movements.find(mov => mov < 0);
+console.log(movements);
+console.log(firstWithdrawal);
+
+// NOTE: There are two fundamental differences between find and filter method. First Filter returns all the elements that match the condition while the Find method only returns the first one. Second and even more important, the Filter method returns a new array while Find only returns the element itself and not an array.
+
+console.log(accounts);
+const account = accounts.find(acc => acc.owner === 'Jessica Davis');
+console.log(account); //{owner: 'Jessica Davis', movements: Array(8), interestRate: 1.5, pin: 2222, username: 'jd'}
+
+// const accountNew = accounts.filter(acc => acc.owner === 'Jessica Davis');
+// console.log(...accountNew);
+
+// TOPIC: SOME AND EVERY
+
+console.log(movements);
+
+// NOTE: We can use the includes method to test if an array includes a certain value. However, we can only really test for equality if any value in the array is exactly equal to -130.
+
+// Equality
+console.log(movements.includes(-130));
+
+// NOTE: We can specify a condition using some method.
+
+// Condition
+console.log(movements.some(mov => mov === -130));
+
+const anyDeposits = movements.some(mov => mov > 1500);
+console.log(anyDeposits);
+
+// Every
+// NOTE: Every method: the every method is pretty similar to the some method. The difference between them is that every only returns true if all of the elements in the array satisfy the condition that we pass in.
+
+// NOTE: If every element passes the test in our callback function, only then the every method returns true
+
+console.log(movements.every(mov => mov > 0));
+console.log(account4.movements.every(mov => mov > 0));
+
+// Separate callback
+
+// NOTE: We could also write this function separately and then pass the function as a callback.
+
+const deposits = mov => mov > 0;
+console.log(movements.some(deposits));
+console.log(movements.every(deposits));
+console.log(movements.filter(deposits));
+
+// TOPIC: FLAT AND FLATMAP
+
+// NOTE: The flat method has no callback function, and it removes the nested arrays and flattens the array, which is why the method is called flat.
+
+const arr = [[1, 2, 3], [4, 5, 6], 7, 8];
+console.log(arr.flat()); // [1, 2, 3, 4, 5, 6, 7, 8]
+
+const arrDeep = [[[1, 2], 3], [4, [5, 6]], 7, 8];
+
+// NOTE: It now goes even into the second level of nesting and also takes the element out of depth array.
+console.log(arrDeep.flat(2)); //  [1, 2, 3, 4, 5, 6, 7, 8]
+
+// flat
+const overalBalance = accounts
+  .map(acc => acc.movements)
+  .flat()
+  .reduce((acc, mov) => acc + mov, 0);
+console.log(overalBalance);
+
+// flatMap
+// NOTE: flatMap only goes one level deep and we cannot change it. So if you do need to go deeper than just one level, you still need to use the flat method.
+const overalBalance2 = accounts
+  .flatMap(acc => acc.movements)
+  .reduce((acc, mov) => acc + mov, 0);
+console.log(overalBalance2);
+
+// TOPIC: SORTING ARRAYS
+
+// Strings
+// NOTE: Sort is actually mutated the original array. So we have to be very careful with this method.
+const owners = ['Jonas', 'Zach', 'Adam', 'Martha'];
+console.log(owners.sort()); // ['Adam', 'Jonas', 'Martha', 'Zach']
+console.log(owners); // ['Adam', 'Jonas', 'Martha', 'Zach']
+
+// Numbers
+// NOTE: The sort method does the sorting based on strings by default.
+console.log(movements);
+
+// return < 0, A, B (keep order)
+// return > 0, B, A (switch order)
+
+// Ascending
+// movements.sort((a, b) => {
+//   if (a > b) return 1;
+//   if (a < b) return -1;
+// });
+movements.sort((a, b) => a - b);
+console.log(movements);
+
+// Descending
+// movements.sort((a, b) => {
+//   if (a > b) return -1;
+//   if (b > a) return 1;
+// });
+movements.sort((a, b) => b - a);
+console.log(movements);
+
+// NOTE: If you have a mixed array, like with strings and numbers together, then this is not gonna work and I advise you to simply not to use the sort method in these cases anyway.
+
+// TOPIC: MORE WAYS OF CREATING AND FILLING ARRAYS
+
+const arr = [1, 2, 3, 4, 5, 6, 7];
+console.log(new Array(1, 2, 3, 4, 5, 6, 7));
+
+// NOTE: The reason for that is this weird behavior of this Array() function which does it so that whenever we only pass in one argument, then it creates a new empty argument with that length.
+
+const x = new Array(7);
+console.log(x); // [empty × 7]
+
+// NOTE: So this is not really useful except for one thing, because there is one method that we can call on this empty array and that is the fill() method.
+
+// console.log(x.map(() => 5));
+
+// NOTE: fill(value, start, end); value: value to fill the array with; start: start index(inclusive), default 0; end: end index(exclusive) default arr.length.
+x.fill(1); // [1, 1, 1, 1, 1, 1, 1]
+// x.fill(1, 3); // [empty × 3, 1, 1, 1, 1]
+x.fill(1, 3, 5); // [empty × 3, 1, 1, empty × 2]
+console.log(x);
+arr.fill(23, 4, 6);
+console.log(arr); // [1, 2, 3, 4, 23, 23, 7]
+
+// NOTE: How to create an array programmatically
+
+// Array.from
+const y = Array.from({ length: 7 }, () => 1);
+console.log(y); // [1, 1, 1, 1, 1, 1, 1]
+
+const z = Array.from({ length: 7 }, (_, i) => i + 1);
+console.log(z); // [1, 2, 3, 4, 5, 6, 7]
+
+// Create an array with 100 random dice
+// NOTE: What Math.random will generate is a random number between 0 to 1 (excludes).
+
+const diceArray = Array.from(
+  { length: 100 },
+  () => Math.trunc(6 * Math.random()) + 1
+);
+console.log(diceArray);
+
+// NOTE: Things like Strings, Maps or Sets, they are all Iterables in JavaScript. Iterables can be converted to real arrays using Array.from().
+
+// NOTE: Using querySelectorAll(), returns something called a NodeList, which is something like an array, which contains all the selected elements. But it's not a real array, and so it doesn't have methods like map() or reduce(). So if we actually wanted to use a real array method like that on a NodeList, we would first need to convert the NodeList to an array. And for that Array.from() is perfect.
+
+labelBalance.addEventListener('click', function () {
+  const movementsUI = Array.from(
+    document.querySelectorAll('.movements__value'),
+    el => Number(el.textContent.replace('€', ''))
+  );
+  console.log(movementsUI);
+
+  const movementsUI2 = [...document.querySelectorAll('.movements__value')].map(
+    el => Number(el.textContent.replace('€', ''))
+  );
+  console.log(movementsUI2);
+});
+
+// TOPIC: ARRAY METHODS PRACTICE
+
+// 1.
+const bankDepositSum = accounts
+  .flatMap(acc => acc.movements)
+  .filter(mov => mov > 0)
+  .reduce((sum, cur) => sum + cur, 0);
+console.log(bankDepositSum);
+
+// 2.
+const numDeposits1000 = accounts
+  .flatMap(acc => acc.movements)
+  // .filter(mov => mov >= 1000).length;
+
+  // NOTE: So we did count plus plus which then increased the value from zero to one. But the result of this expression here is still zero. And so zero was returned here to the next iteration. And therefore in the end we will always have zero. So we should use ++count.
+
+  // NOTE: count++ will first return the value then execute the code, ++count will execute the code and then return the value.
+
+  // .reduce((count, cur) => (cur >= 1000 ? count++ : count), 0);
+  .reduce((count, cur) => (cur >= 1000 ? ++count : count), 0);
+
+console.log(numDeposits1000);
+
+let a = 10;
+console.log(a++); // 10
+console.log(++a); // 12
+console.log(a); // 12
+
+// 3.
+const { deposits, withdrawals } = accounts
+  .flatMap(acc => acc.movements)
+  .reduce(
+    (sums, cur) => {
+      // cur > 0 ? (sums.deposits += cur) : (sums.withdrawals += cur);
+// NOTE: We can access a object property by both Object.propertyName and Object['propertyName'].
+      sums[cur > 0 ? 'deposits' : 'withdrawals'] += cur;
+      return sums;
+    },
+    { deposits: 0, withdrawals: 0 }
+  );
+console.log(deposits, withdrawals);
+// {deposits: 25180, withdrawals: -7340}
+console.log(accounts);
+console.log(accounts.flat());
+
+// 4.
+// this is a nice title -> This Is a Nice Title
+const convertTitleCase = function (title) {
+  const capitalize = str => str[0].toUpperCase() + str.slice(1);
+
+  const exceptions = ['a', 'an', 'and', 'the', 'but', 'or', 'on', 'in', 'with'];
+  const titleCase = title
+    .toLowerCase()
+    .split(' ')
+    .map(word =>
+      exceptions.includes(word) ? word : word[0].toUpperCase() + word.slice(1)
+    )
+    .join(' ');
+  return capitalize(titleCase);
 };
-// NOTE: The Intl.NumberFormat object enables language-sensitive number formatting.
-console.log('US: ', new Intl.NumberFormat('en-US', options).format(num)); // US:  €3,884,764.23
-console.log('Germany: ', new Intl.NumberFormat('de-DE', options).format(num)); // Germany:  3.884.764,23 €
-console.log('Syria: ', new Intl.NumberFormat('ar-SY', options).format(num)); // Syria:  ٣٬٨٨٤٬٧٦٤٫٢٣ €
-console.log(
-  navigator.language,
-  new Intl.NumberFormat(navigator.language, options).format(num)
-); // en-GB €3,884,764.23
-
-// TOPIC: TIMERS: setTimeout AND setInterval
-
-// setTimeout: simply schedules a function to run after a certain amount of time, and the callback function is only executed once.
-
-// NOTE: When the execution of our code reaches this point, it will simply call the setTimeout function, it will then essentially register this callback function here to be called later. And then the code execution simply continues. And this mechanism is called Asynchronous JavaScript.
-const ingredients = ['olives', 'spinach'];
-const pizzaTimer = setTimeout(
-  (ing1, ing2) => console.log(`Here is your pizza with ${ing1} and ${ing2} 🍕`),
-  3000,
-  ...ingredients
-); // Here is your pizza with olives and spinach 🍕
-console.log('Waiting...');
-// NOTE: We can actually cancel the timer, at least until the delay has actually passed. So before these three seconds here have passed, we can cancel the timeout. We can store the result of the setTimeout function into a variable and then we can use that variable to delete the timer using clearTimeout.
-if (ingredients.includes('spinach')) clearTimeout(pizzaTimer);
-
-// setInterval
-// NOTE: The setInterval() method, offered on the Window and Worker interfaces, repeatedly calls a function or executes a code snippet, with a fixed time delay between each call. This method returns an interval ID which uniquely identifies the interval, so you can remove it later by calling clearInterval().
-
-setInterval(function () {
-  const nowHour = new Date().getHours();
-  const nowMinute = new Date().getMinutes();
-  const nowSecond = new Date().getSeconds();
-  console.log(`${nowHour}:${nowMinute}:${nowSecond}`);
-}, 1000);
-
-console.log('first');
-setTimeout(() => {
-  console.log('second');
-}, 0);
-console.log('third');
+console.log(convertTitleCase('this is a nice title'));
+console.log(convertTitleCase('this is a LONG title but not too long'));
+console.log(convertTitleCase('and here is another title with an EXAMPLE'));
 */
-// TOPIC: IMPLEMENTING A COUNTDOWN TIMER
